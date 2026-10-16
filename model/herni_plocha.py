@@ -1,8 +1,8 @@
 from typing import Optional
 
-from figurka import Figurka
-from figurky import Pesak, Kral
-from tah import Tah
+from model.figurka import Figurka
+from model.figurky import Pesak, Kral, Dama, Vez, Strelec, Kun
+from model.tah import Tah
 
 
 class HerniPlocha:
@@ -13,9 +13,12 @@ class HerniPlocha:
         self.nastav_start()
 
     def nastav_start(self) -> None:
-        # Zjednodušené rozestavení: králové a pěšáci
-        self.deska[0][4] = Kral("bila")
-        self.deska[7][4] = Kral("cerna")
+        self.deska = [[None for _ in range(8)] for _ in range(8)]
+        self.sebrane_figurky = []
+        poradi = [Vez, Kun, Strelec, Dama, Kral, Strelec, Kun, Vez]
+        for x in range(8):
+            self.deska[0][x] = poradi[x]("bila")
+            self.deska[7][x] = poradi[x]("cerna")
 
         for x in range(8):
             self.deska[1][x] = Pesak("bila")
@@ -26,6 +29,8 @@ class HerniPlocha:
         return 0 <= x < 8 and 0 <= y < 8
 
     def vrat_figuru(self, pozice: tuple[int, int]) -> Optional[Figurka]:
+        if not self.je_v_desce(pozice):
+            return None
         x, y = pozice
         return self.deska[y][x]
 
@@ -35,7 +40,10 @@ class HerniPlocha:
 
         figura = self.vrat_figuru(tah.start)
 
-        if figura is None:
+        cil = self.vrat_figuru(tah.cil)
+        if figura is None or tah.start == tah.cil:
+            return False
+        if cil is not None and (cil.barva == figura.barva or cil.nazev == "kral"):
             return False
 
         sx, sy = tah.start
@@ -43,6 +51,11 @@ class HerniPlocha:
 
         self.deska[cy][cx] = figura
         self.deska[sy][sx] = None
+        if cil is not None:
+            self.sebrane_figurky.append(cil)
+        # Na konci desky se pěšák v této verzi vždy promění v dámu.
+        if figura.nazev == "pesak" and cy in (0, 7):
+            self.deska[cy][cx] = Dama(figura.barva)
         return True
 
     def vypis(self) -> None:

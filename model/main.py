@@ -1,193 +1,99 @@
+# Tento blok dovoluje i původní spuštění: python model/main.py.
+if __package__ in (None, ""):
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from dataclasses import dataclass
-from typing import Optional
-
-
-@dataclass
-class Uzivatel:
-    jmeno: str
-    email: str
-    elo: int
-
-
-@dataclass
-class Hrac:
-    uzivatel: Uzivatel
-    barva: str  # "bila" nebo "cerna"
-
-    def get_elo_rating(self) -> int:
-        return self.uzivatel.elo
+from model.models import Uzivatel, Hrac
+from model.game_manager import GameManager
+from model.tah import Tah, text_na_pozici, pozice_na_text
 
 
-class Figurka:
-    def __init__(self, nazev: str, barva: str):
-        self.nazev = nazev
-        self.barva = barva
-
-    def symbol(self) -> str:
-        znaky = {
-            "kral": "K",
-            "dama": "D",
-            "vez": "V",
-            "strelec": "S",
-            "kun": "J",
-            "pesak": "P",
-        }
-        znak = znaky[self.nazev]
-        return znak if self.barva == "bila" else znak.lower()
+def nova_hra():
+    bily = Hrac(Uzivatel("Štěpán", "", 1200), "bila")
+    cerny = Hrac(Uzivatel("Druhý hráč", "", 1200), "cerna")
+    return GameManager(bily, cerny)
 
 
-class Pesak(Figurka):
-    def __init__(self, barva: str):
-        super().__init__("pesak", barva)
+def vypis_questy(hra):
+    for hrac in hra.hraci:
+        print(f"{hrac.uzivatel.jmeno} ({hrac.barva}): {hrac.skore} bodů")
+        for quest in hra.quest_manager.questy[hrac.barva]:
+            stav = "hotovo" if quest.splneno else "čeká"
+            print(f"  {quest.nazev}: {quest.popis} [{stav}, {quest.odmena} bodů]")
 
 
-class Kral(Figurka):
-    def __init__(self, barva: str):
-        super().__init__("kral", barva)
-
-
-@dataclass
-class Tah:
-    start: tuple[int, int]
-    cil: tuple[int, int]
-
-
-class HerniPlocha:
-    def __init__(self):
-        self.deska: list[list[Optional[Figurka]]] = [
-            [None for _ in range(8)] for _ in range(8)
-        ]
-        self.nastav_start()
-
-    def nastav_start(self) -> None:
-        # Zjednodušené rozestavení: králové a pěšáci
-        self.deska[0][4] = Kral("bila")
-        self.deska[7][4] = Kral("cerna")
-
-        for x in range(8):
-            self.deska[1][x] = Pesak("bila")
-            self.deska[6][x] = Pesak("cerna")
-
-    def je_v_desce(self, pozice: tuple[int, int]) -> bool:
-        x, y = pozice
-        return 0 <= x < 8 and 0 <= y < 8
-
-    def vrat_figuru(self, pozice: tuple[int, int]) -> Optional[Figurka]:
-        x, y = pozice
-        return self.deska[y][x]
-
-    def posun_figuru(self, tah: Tah) -> bool:
-        if not self.je_v_desce(tah.start) or not self.je_v_desce(tah.cil):
-            return False
-
-        figura = self.vrat_figuru(tah.start)
-
-        if figura is None:
-            return False
-
-        sx, sy = tah.start
-        cx, cy = tah.cil
-
-        self.deska[cy][cx] = figura
-        self.deska[sy][sx] = None
-        return True
-
-    def vypis(self) -> None:
-        for y in range(7, -1, -1):
-            radek = []
-            for x in range(8):
-                figura = self.deska[y][x]
-                radek.append(figura.symbol() if figura else ".")
-            print(y + 1, " ".join(radek))
-        print("  a b c d e f g h")
-
-
-class RevizorTahu:
-    def __init__(self, plocha: HerniPlocha):
-        self.plocha = plocha
-
-    def over_tah(self, tah: Tah, aktivni_barva: str) -> bool:
-        figura = self.plocha.vrat_figuru(tah.start)
-
-        if figura is None:
-            return False
-
-        if figura.barva != aktivni_barva:
-            return False
-
-        # Základní jednoduchá validace:
-        # figura se nesmí posunout mimo desku
-        # a nesmí stát na místě
-        if not self.plocha.je_v_desce(tah.cil):
-            return False
-
-        if tah.start == tah.cil:
-            return False
-
-        return True
-
-
-class GameLogger:
-    def __init__(self):
-        self.tahy: list[Tah] = []
-
-    def uloz_tah(self, tah: Tah) -> None:
-        self.tahy.append(tah)
-
-    def vypis_log(self) -> None:
-        print("Historie tahů:")
-        for i, tah in enumerate(self.tahy, start=1):
-            print(f"{i}. {tah.start} -> {tah.cil}")
-
-
-class GameManager:
-    def __init__(self, hrac1: Hrac, hrac2: Hrac):
-        self.hraci = [hrac1, hrac2]
-        self.aktivni_barva = "bila"
-        self.plocha = HerniPlocha()
-        self.revizor = RevizorTahu(self.plocha)
-        self.logger = GameLogger()
-
-    def proved_tah(self, tah: Tah) -> bool:
-        if self.revizor.over_tah(tah, self.aktivni_barva):
-            self.plocha.posun_figuru(tah)
-            self.logger.uloz_tah(tah)
-            self.prepni_hrace()
-            return True
-
-        print("Neplatný tah.")
-        return False
-
-    def prepni_hrace(self) -> None:
-        if self.aktivni_barva == "bila":
-            self.aktivni_barva = "cerna"
-        else:
-            self.aktivni_barva = "bila"
+def demo():
+    hra = nova_hra()
+    for odkud, kam in [("e2", "e4"), ("d7", "d5"), ("e4", "d5")]:
+        hra.proved_tah(Tah(text_na_pozici(odkud), text_na_pozici(kam)))
+        print(hra.zprava)
+    hra.casovac.zastav()
+    hra.plocha.vypis()
+    hra.logger.vypis_log()
+    vypis_questy(hra)
 
 
 def main():
-    uzivatel1 = Uzivatel("Štěpán", "stepan@email.cz", 1200)
-    uzivatel2 = Uzivatel("Bot", "bot@email.cz", 1000)
-
-    hrac1 = Hrac(uzivatel1, "bila")
-    hrac2 = Hrac(uzivatel2, "cerna")
-
-    hra = GameManager(hrac1, hrac2)
-
-    print("Start hry:")
+    hra = nova_hra()
+    print("ChessWithQuests – dva hráči u jednoho počítače")
+    print("Tah: e2 e4 | mozne e2 | historie | questy | cas | uloz | konec")
+    print("Zjednodušená verze: bez rošády a braní mimochodem, proměna vždy na dámu.")
     hra.plocha.vypis()
-
-    print("\nProvedu ukázkové tahy:")
-    hra.proved_tah(Tah((4, 1), (4, 2)))  # bílý pěšák
-    hra.proved_tah(Tah((4, 6), (4, 5)))  # černý pěšák
-
-    print("\nDeska po tazích:")
-    hra.plocha.vypis()
-
-    print()
-    hra.logger.vypis_log()
+    try:
+        while True:
+            if hra.stav == "mat":
+                print("Mat. Vyhrává", "černý." if hra.aktivni_barva == "bila" else "bílý.")
+                break
+            if hra.stav == "pat":
+                print("Pat – remíza.")
+                break
+            if hra.stav == "sach":
+                print("Pozor, šach!")
+            prikaz = input(f"{hra.aktivni_barva} > ").strip().lower()
+            casti = prikaz.split()
+            if prikaz == "konec":
+                break
+            if prikaz == "historie":
+                hra.logger.vypis_log()
+            elif prikaz == "questy":
+                vypis_questy(hra)
+            elif prikaz == "cas":
+                for barva in ["bila", "cerna"]:
+                    print(barva, round(hra.casovac.vrat_cas(barva), 1), "sekund")
+            elif prikaz == "uloz":
+                try:
+                    print("Uloženo:", hra.uloz_hru())
+                except OSError as chyba:
+                    print("Uložení se nepodařilo:", chyba)
+            else:
+                try:
+                    if len(casti) == 2 and casti[0] == "mozne":
+                        pozice = text_na_pozici(casti[1])
+                        cile = hra.revizor.mozne_tahy(pozice, hra.aktivni_barva)
+                        print("Možné cíle:", " ".join(pozice_na_text(cil) for cil in cile) or "žádné")
+                    elif len(casti) == 2:
+                        tah = Tah(text_na_pozici(casti[0]), text_na_pozici(casti[1]))
+                        if hra.proved_tah(tah):
+                            hra.plocha.vypis()
+                        print(hra.zprava)
+                    else:
+                        print("Zadej tah jako e2 e4 nebo některý z příkazů nahoře.")
+                except ValueError as chyba:
+                    print(chyba)
+    except (EOFError, KeyboardInterrupt):
+        print("\nHra přerušena.")
+    finally:
+        hra.casovac.zastav()
+    try:
+        print("Historie uložena:", hra.uloz_hru())
+    except OSError as chyba:
+        print("Uložení se nepodařilo:", chyba)
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+    if "--demo" in sys.argv:
+        demo()
+    else:
+        main()
