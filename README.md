@@ -98,9 +98,3 @@ python -m unittest test_hra -v
 Testy ověřují pohyb a blokování figurek, vlastní šach, obnovu desky po simulaci,
 mat/pat, questy, export, čas a neplatné vstupy. Testovací kód není nutné znát pro ovládání hry.
 
-## Podklady
-
-Rozsah funkcí byl porovnán s forky
-[Anny](https://github.com/annalapackovagjkt/ChessWithQuests) a
-[Sofie](https://github.com/sofie-josefinamodrackova-cyber/ChessWithQuests).
-Implementace navazuje na původní třídy tohoto forku. Licence projektu zůstává v souboru LICENSE.
