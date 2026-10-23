@@ -1,0 +1,8 @@
+1. bila pesak g2-g4
+2. cerna pesak h7-h5
+3. bila pesak g4-h5 (sebrána: pesak)
+4. cerna pesak g7-g6
+5. bila pesak h5-g6 (sebrána: pesak)
+6. cerna pesak f7-f6
+7. bila pesak g6-g7
+8. cerna strelec f8-g7 (sebrána: pesak)

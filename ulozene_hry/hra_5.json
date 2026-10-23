@@ -1,0 +1,27 @@
+{
+  "stav": "hra",
+  "na_tahu": "bila",
+  "pocet_tahu": 8,
+  "hraci": [
+    {
+      "jmeno": "Štěpán",
+      "barva": "bila",
+      "skore": 40,
+      "cas_sekundy": 361.2,
+      "questy": [
+        "První tah",
+        "První úlovek"
+      ]
+    },
+    {
+      "jmeno": "Druhý hráč",
+      "barva": "cerna",
+      "skore": 40,
+      "cas_sekundy": 11.02,
+      "questy": [
+        "První tah",
+        "První úlovek"
+      ]
+    }
+  ]
+}
