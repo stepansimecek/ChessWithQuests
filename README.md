@@ -61,9 +61,3 @@ Hra je zjednodušená:
 | :--- | :--- |
 | Textová verze | `python main.py --terminal` |
 | Krátká ukázka | `python main.py --demo` |
-
-### Spuštění testů
-
-```bash
-python -m unittest test_hra test_controller -v
-```
