@@ -2,100 +2,155 @@ import tkinter as tk
 
 
 class HraView:
-    """View má na starosti vzhled okna. Nerozhoduje o platnosti tahů."""
+    """Vzhled okna. Pravidla stále řeší model, kliknutí controller."""
 
     def __init__(self, okno):
         self.okno = okno
-        self.okno.title("ChessWithQuests – šachy s questy")
-        self.okno.resizable(False, False)
-        self.velikost_pole = 60
-        self.okraj = 24
+        self.pozadi, self.karta = "#101b26", "#1b2b39"
+        self.text, self.tlumena = "#edf2ef", "#a3b5bd"
+        self.velikost_pole, self.okraj = 58, 26
+        okno.title("ChessWithQuests • nová podoba")
+        okno.configure(bg=self.pozadi)
+        okno.resizable(False, False)
+        okno.option_add("*Font", ("Segoe UI", -13))
 
-        tk.Label(okno, text="ChessWithQuests", font=("Arial", 20, "bold")).pack(pady=(12, 4))
-        tk.Label(okno, text="Klikni na svou figurku a potom na cílové pole.").pack()
-        obsah = tk.Frame(okno)
-        obsah.pack(padx=12, pady=10)
+        hlavicka = tk.Frame(okno, bg=self.pozadi)
+        hlavicka.pack(fill="x", padx=22, pady=(16, 12))
+        tk.Label(hlavicka, text="CHESS / QUESTS", font=("Segoe UI", -26, "bold"),
+                 bg=self.pozadi, fg=self.text).pack(side="left")
+        tk.Label(hlavicka, text="DVA HRÁČI · JEDNA DESKA", font=("Segoe UI", -12),
+                 bg=self.pozadi, fg="#70cfb0").pack(side="right")
 
-        # Canvas je kreslicí plocha. Budeme na ni kreslit pole a figurky.
+        obsah = tk.Frame(okno, bg=self.pozadi)
+        obsah.pack(padx=22)
+        leva = tk.Frame(obsah, bg=self.pozadi)
+        leva.grid(row=0, column=0, sticky="n")
         rozmer = 8 * self.velikost_pole + 2 * self.okraj
-        self.canvas = tk.Canvas(obsah, width=rozmer, height=rozmer,
-                                bg="#f5f1e8", highlightthickness=0)
-        self.canvas.grid(row=0, column=0)
+        self.canvas = tk.Canvas(leva, width=rozmer, height=rozmer,
+                                bg=self.karta, highlightthickness=0, cursor="hand2")
+        self.canvas.pack()
+        tk.Label(leva, text="VYBER FIGURKU  →  KLIKNI NA CÍLOVÉ POLE",
+                 bg=self.pozadi, fg=self.tlumena, font=("Segoe UI", -12)).pack(pady=10)
+        panel = tk.Frame(obsah, bg=self.pozadi)
+        panel.grid(row=0, column=1, padx=(18, 0), sticky="n")
+        stav_karta = self.nova_karta(panel, "PRŮBĚH PARTIE")
+        self.stav = tk.Label(stav_karta, bg=self.karta, fg="#70cfb0",
+                             font=("Segoe UI", -20, "bold"), anchor="w")
+        self.stav.pack(fill="x", pady=(6, 8))
+        hodiny = tk.Frame(stav_karta, bg=self.karta)
+        hodiny.pack(fill="x")
+        self.cas_bily = self.hodiny(hodiny, "BÍLÝ", "#ecede5", "#162736")
+        self.cas_cerny = self.hodiny(hodiny, "ČERNÝ", "#101b26", "#edf2ef")
+        quest_karta = self.nova_karta(panel, "QUESTY A BODY")
+        self.questy = tk.Label(quest_karta, bg=self.karta, fg=self.text,
+                               justify="left", anchor="w", font=("Segoe UI", -12),
+                               wraplength=278)
+        self.questy.pack(fill="x", pady=(6, 0))
+        historie_karta = self.nova_karta(panel, "POSLEDNÍ TAHY")
+        self.historie = tk.Listbox(historie_karta, width=33, height=4,
+                                  bg=self.karta, fg=self.text, bd=0,
+                                  highlightthickness=0, selectbackground="#356857",
+                                  font=("Consolas", -13), activestyle="none")
+        self.historie.pack(fill="x", pady=(6, 0))
+        self.tlacitko_zrus = self.tlacitko(panel, "Zrušit výběr", False)
+        self.tlacitko_uloz = self.tlacitko(panel, "Uložit historii", True)
+        self.tlacitko_konec = self.tlacitko(panel, "Uložit a zavřít", False)
+        self.zprava = tk.Label(okno, text="Vyber bílou figurku.",
+                               bg=self.karta, fg=self.text, anchor="w", justify="left",
+                               wraplength=790, padx=14, pady=10)
+        self.zprava.pack(fill="x", padx=22, pady=(10, 6))
+        tk.Label(okno, text="Zjednodušená pravidla · bez rošády a braní mimochodem · proměna na dámu",
+                 bg=self.pozadi, fg=self.tlumena, font=("Segoe UI", -11)).pack(pady=(0, 12))
 
-        panel = tk.Frame(obsah, width=300)
-        panel.grid(row=0, column=1, padx=(16, 0), sticky="n")
-        self.stav = tk.Label(panel, font=("Arial", 13, "bold"), anchor="w")
-        self.stav.pack(fill="x")
-        self.cas = tk.Label(panel, anchor="w")
-        self.cas.pack(fill="x", pady=(5, 12))
-        tk.Label(panel, text="Questy", font=("Arial", 12, "bold"), anchor="w").pack(fill="x")
-        self.questy = tk.Label(panel, justify="left", anchor="w", wraplength=300)
-        self.questy.pack(fill="x", pady=(4, 12))
-        tk.Label(panel, text="Historie tahů", font=("Arial", 12, "bold"), anchor="w").pack(fill="x")
-        self.historie = tk.Listbox(panel, width=43, height=8)
-        self.historie.pack(pady=(4, 12))
-        self.tlacitko_zrus = tk.Button(panel, text="Zrušit výběr")
-        self.tlacitko_zrus.pack(fill="x", pady=2)
-        self.tlacitko_uloz = tk.Button(panel, text="Uložit historii")
-        self.tlacitko_uloz.pack(fill="x", pady=2)
-        self.tlacitko_konec = tk.Button(panel, text="Uložit a zavřít")
-        self.tlacitko_konec.pack(fill="x", pady=2)
+    def nova_karta(self, rodic, nadpis):
+        # Karta sdružuje informace, které patří k sobě.
+        karta = tk.Frame(rodic, bg=self.karta, padx=12, pady=10)
+        karta.pack(fill="x", pady=(0, 9))
+        tk.Label(karta, text=nadpis, bg=self.karta, fg=self.tlumena,
+                 font=("Segoe UI", -11, "bold"), anchor="w").pack(fill="x")
+        return karta
 
-        self.zprava = tk.Label(okno, text="Vyber bílou figurku.", wraplength=800)
-        self.zprava.pack(padx=12, pady=(0, 8))
-        tk.Label(okno, text="K král · D dáma · V věž · S střelec · J jezdec · P pěšák").pack()
-        tk.Label(okno, text="Bez rošády a braní mimochodem. Proměna pěšáka vždy na dámu.",
-                 fg="#555555").pack(pady=(3, 12))
+    def hodiny(self, rodic, nadpis, pozadi, barva):
+        ramecek = tk.Frame(rodic, bg=pozadi, padx=10, pady=5)
+        ramecek.pack(side="left", expand=True, fill="x", padx=2)
+        tk.Label(ramecek, text=nadpis, bg=pozadi, fg=barva,
+                 font=("Segoe UI", -11, "bold")).pack(anchor="w")
+        cas = tk.Label(ramecek, text="00:00", bg=pozadi, fg=barva,
+                       font=("Consolas", -23, "bold"))
+        cas.pack(anchor="w")
+        return cas
+
+    def tlacitko(self, rodic, text, hlavni):
+        barva = "#70cfb0" if hlavni else self.karta
+        tlacitko = tk.Button(rodic, text=text, bg=barva,
+                            fg="#101b26" if hlavni else self.text,
+                            activebackground="#96e2c9", activeforeground="#101b26",
+                            relief="flat", bd=0, pady=6, cursor="hand2")
+        tlacitko.pack(fill="x", pady=(0, 5))
+        return tlacitko
 
     def vykresli_desku(self, deska, vybrane, mozne_cile):
-        # Nejjednodušší překreslení: starý obrázek smažeme a nakreslíme nový.
         self.canvas.delete("all")
         for y in range(8):
             for x in range(8):
-                # Model počítá řady odspodu, Canvas má nulu nahoře.
                 vlevo = self.okraj + x * self.velikost_pole
                 nahore = self.okraj + (7 - y) * self.velikost_pole
-                vpravo = vlevo + self.velikost_pole
-                dole = nahore + self.velikost_pole
-                barva = "#eadcc4" if (x + y) % 2 else "#8caa90"
+                velikost = self.velikost_pole
+                barva = "#e5e6d8" if (x + y) % 2 else "#668b7c"
                 if (x, y) == vybrane:
-                    barva = "#f4cf61"
-                self.canvas.create_rectangle(vlevo, nahore, vpravo, dole,
-                                             fill=barva, outline=barva, tags="pole")
+                    barva = "#e6c66d"
+                self.canvas.create_rectangle(vlevo, nahore, vlevo + velikost,
+                                             nahore + velikost, fill=barva,
+                                             outline=barva, tags="pole")
                 figura = deska[y][x]
                 if figura is not None:
-                    # Kruh s písmenem je čitelný i bez obrázků a speciálních fontů.
-                    vypln = "#ffffff" if figura.barva == "bila" else "#27352e"
-                    pismo = "#27352e" if figura.barva == "bila" else "#ffffff"
-                    self.canvas.create_oval(vlevo + 9, nahore + 9, vpravo - 9, dole - 9,
-                                            fill=vypln, outline="#27352e", tags="figurka")
-                    self.canvas.create_text((vlevo + vpravo) / 2, (nahore + dole) / 2,
-                                            text=figura.symbol().upper(), fill=pismo,
-                                            font=("Arial", 22, "bold"), tags="symbol")
+                    self.nakresli_figurku(figura, vlevo + velikost / 2,
+                                         nahore + velikost / 2)
                 if (x, y) in mozne_cile:
-                    self.canvas.create_rectangle(vlevo + 3, nahore + 3, vpravo - 3, dole - 3,
-                                                 outline="#1966ba", width=3, tags="cil")
+                    # Tečka označuje volné pole, rámeček možnost braní.
+                    if figura is None:
+                        cx, cy = vlevo + velikost / 2, nahore + velikost / 2
+                        self.canvas.create_oval(cx - 7, cy - 7, cx + 7, cy + 7,
+                                                fill="#315f50", outline="", tags="cil")
+                    else:
+                        self.canvas.create_rectangle(vlevo + 3, nahore + 3,
+                                                     vlevo + velikost - 3, nahore + velikost - 3,
+                                                     outline="#b4514c", width=3, tags="cil")
         for cislo in range(8):
-            stred = self.okraj + cislo * self.velikost_pole + self.velikost_pole / 2
-            self.canvas.create_text(stred, 12, text="abcdefgh"[cislo])
-            self.canvas.create_text(stred, 8 * self.velikost_pole + self.okraj + 12,
-                                    text="abcdefgh"[cislo])
-            self.canvas.create_text(12, stred, text=str(8 - cislo))
+            stred = self.okraj + (cislo + 0.5) * self.velikost_pole
+            self.canvas.create_text(stred, 13, text="abcdefgh"[cislo], fill=self.tlumena)
+            self.canvas.create_text(stred, self.okraj + 8 * self.velikost_pole + 13,
+                                    text="abcdefgh"[cislo], fill=self.tlumena)
+            self.canvas.create_text(13, stred, text=str(8 - cislo), fill=self.tlumena)
+
+    def nakresli_figurku(self, figura, x, y):
+        # Plné šachové znaky obarvíme podle hráče a přidáme obrys.
+        znaky = {"K": "♚", "D": "♛", "V": "♜", "S": "♝", "J": "♞", "P": "♟"}
+        znak = znaky[figura.symbol().upper()]
+        barva = "#fffaf0" if figura.barva == "bila" else "#182530"
+        obrys = "#263d3a" if figura.barva == "bila" else "#cad4c7"
+        font = ("Segoe UI Symbol", -48)  # Záporná velikost je v pixelech, nezvětší se s DPI.
+        for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+            self.canvas.create_text(x + dx, y + dy, text=znak, fill=obrys,
+                                    font=font, tags="obrys")
+        self.canvas.create_text(x, y, text=znak, fill=barva, font=font, tags="figurka")
 
     def zobraz_stav(self, text):
-        self.stav.config(text=text)
+        self.stav.config(text=text, fg="#edc574" if "ŠACH" in text or "MAT" in text else "#70cfb0")
 
     def zobraz_zpravu(self, text):
         self.zprava.config(text=text)
 
     def zobraz_questy(self, text):
-        self.questy.config(text=text)
+        self.questy.config(text=text.replace(": hotovo", "  ✓").replace(": čeká", "  ○"))
 
     def zobraz_historii(self, zaznamy):
         self.historie.delete(0, tk.END)
         for cislo, zaznam in enumerate(zaznamy, start=1):
-            self.historie.insert(tk.END, f"{cislo}. {zaznam}")
+            self.historie.insert(tk.END, f"{cislo:>2}.  {zaznam}")
         self.historie.yview_moveto(1)
 
     def zobraz_cas(self, bily, cerny):
-        self.cas.config(text=f"Čas: bílý {int(bily)} s | černý {int(cerny)} s")
+        for popisek, sekundy in [(self.cas_bily, bily), (self.cas_cerny, cerny)]:
+            minuty, sekundy = divmod(int(sekundy), 60)
+            popisek.config(text=f"{minuty:02}:{sekundy:02}")
