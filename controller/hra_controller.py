@@ -47,7 +47,7 @@ class HraController:
         if figura is not None and figura.barva == self.hra.aktivni_barva:
             self.vybrane = pozice
             self.mozne_cile = self.hra.revizor.mozne_tahy(pozice, self.hra.aktivni_barva)
-            self.view.zobraz_zpravu("Vybráno " + pozice_na_text(pozice) + ". Modrý rámeček označuje možné cíle.")
+            self.view.zobraz_zpravu("Vybráno " + pozice_na_text(pozice) + ". Tečky označují volná cílová pole, rámeček možnost braní.")
         elif self.vybrane is None:
             self.view.zobraz_zpravu("Nejprve vyber figurku hráče, který je na tahu.")
         else:
