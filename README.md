@@ -1,63 +1,17 @@
-# ♟ ChessWithQuests
+# ChessWithQuests – nový vzhled
 
-**Školní šachová hra v Pythonu pro dva hráče.**
+Samostatná kopie pro vyzkoušení. Původní hra ani GitHub se nemění.
 
-Hrají dva hráči u jednoho počítače. Kromě šachů plní jednoduché úkoly (questy), za které získávají body.
+Na tomto počítači otevři **SPUSTIT NOVY DESIGN.lnk** dvojklikem.
+Na jiném počítači spusť ve složce projektu: python main.py (Python s Tkinterem).
+Zástupce je určený pro tento počítač a tuto složku.
 
-## Spuštění
+## Co vyzkoušet
+- Klikni na bílého pěšáka e2 a potom na e4.
+- Černým zahraj d7–d5, bílým e4–d5.
+- Zkontroluj historii a body za questy.
+- Vyzkoušej zrušení výběru a uložení historie.
 
-Potřebuješ **Python 3.10 nebo novější**. Ve složce projektu spusť:
-
-```bash
-python main.py
-```
-
-Otevře se okno se šachovnicí.
-
-## Jak hrát
-
-1. **Klikni na svou figurku.**
-2. **Klikni na cílové pole.** Možné tahy se zvýrazní.
-3. **Po platném tahu hraje druhý hráč.**
-
-Vedle šachovnice uvidíš **hráče na tahu, čas, questy a historii**.
-Tlačítkem **Uložit historii** uložíš přehled partie do složky `ulozene_hry`.
-
-### Označení figurek
-
-| K | D | V | S | J | P |
-| :---: | :---: | :---: | :---: | :---: | :---: |
-| Král | Dáma | Věž | Střelec | Jezdec | Pěšák |
-
-## Co hra umí
-
-- **Pravidla:** pohyb a braní figurek, střídání hráčů a kontrola šachu, matu a patu.
-- **Questy:** jednoduché úkoly a počítání bodů.
-- **Přehled partie:** měření času a historie tahů.
-- **Ukládání:** přehled hry ve formátu TXT a JSON.
-
-### Co zatím chybí
-
-Hra je zjednodušená:
-
-- Chybí rošáda a braní mimochodem. Pěšák se mění jen v dámu.
-- Neřeší se remíza opakováním pozice, pravidlem 50 tahů ani nedostatkem materiálu.
-- Čas se pouze měří.
-- Uloženou partii zatím nejde znovu načíst.
-- Není tu počítačový soupeř ani hra po síti.
-
-## Rozdělení projektu
-
-| Část | Co dělá |
-| :--- | :--- |
-| `model` | Uchovává stav hry a kontroluje pravidla. |
-| `view` | Kreslí šachovnici a další části okna pomocí Tkinter Canvas. |
-| `controller` | Reaguje na kliknutí a propojuje pravidla se zobrazením. |
-| `gui.py` | Spojí jednotlivé části a otevře okno. |
-
-## Další možnosti
-
-| Možnost | Příkaz |
-| :--- | :--- |
-| Textová verze | `python main.py --terminal` |
-| Krátká ukázka | `python main.py --demo` |
+Žlutá zvýrazňuje výběr, zelená tečka volný cíl a červený rámeček braní.
+Figurky používají šachové znaky písma Segoe UI Symbol ve Windows.
+Uložené partie jsou ve složce ulozene_hry uvnitř této kopie.
